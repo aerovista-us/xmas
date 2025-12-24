@@ -1,0 +1,1402 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <title>EchoVerse • SwampHop Christmas Eve Player</title>
+  <style>
+    :root{
+      --bg0:#070A10;
+      --bg1:#0C1222;
+      --card:rgba(255,255,255,.06);
+      --stroke:rgba(255,255,255,.12);
+      --text:rgba(255,255,255,.92);
+      --muted:rgba(255,255,255,.65);
+      --muted2:rgba(255,255,255,.48);
+      --good:#6CFFB5;
+      --warn:#FFD36C;
+      --hot:#FF6CA6;
+      --cyan:#6CEBFF;
+      --shadow: 0 18px 60px rgba(0,0,0,.55);
+      --r:18px;
+    }
+
+    *{ box-sizing:border-box; }
+    html,body{ height:100%; }
+    body{
+      margin:0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Apple Color Emoji","Segoe UI Emoji";
+      color:var(--text);
+      background: radial-gradient(1200px 900px at 15% 20%, rgba(108,235,255,.18), transparent 55%),
+                  radial-gradient(1200px 900px at 85% 30%, rgba(255,108,166,.14), transparent 58%),
+                  radial-gradient(1000px 800px at 55% 88%, rgba(108,255,181,.12), transparent 55%),
+                  linear-gradient(180deg, var(--bg0), var(--bg1));
+      overflow:hidden;
+    }
+
+    /* Ambient animated grid */
+    .grid{
+      position:fixed; inset:0; pointer-events:none; opacity:.35;
+      background-image:
+        linear-gradient(to right, rgba(255,255,255,.06) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(255,255,255,.06) 1px, transparent 1px);
+      background-size: 48px 48px;
+      transform: perspective(800px) rotateX(62deg) translateY(-12vh);
+      filter: blur(.2px);
+      mask-image: radial-gradient(closest-side at 50% 50%, rgba(0,0,0,.78), transparent 72%);
+      animation: gridDrift 10s linear infinite;
+    }
+    @keyframes gridDrift{
+      0%{ background-position: 0 0, 0 0; }
+      100%{ background-position: 120px 0, 0 120px; }
+    }
+
+    /* Snow particles */
+    canvas#snow { position:fixed; inset:0; pointer-events:none; opacity:.55; }
+
+    .wrap{
+      position:relative;
+      height:100%;
+      display:flex;
+      padding: clamp(10px, 2.2vw, 18px);
+      gap: clamp(10px, 2.2vw, 16px);
+      align-items:stretch;
+    }
+
+    .panel{
+      background: linear-gradient(180deg, var(--card), rgba(255,255,255,.035));
+      border:1px solid var(--stroke);
+      box-shadow: var(--shadow);
+      border-radius: var(--r);
+      overflow:hidden;
+      backdrop-filter: blur(10px);
+    }
+
+    /* Left: Player */
+    .player{
+      flex: 1.2;
+      min-width: 340px;
+      display:flex;
+      flex-direction:column;
+    }
+
+    .top{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      padding: 14px 16px;
+      border-bottom:1px solid var(--stroke);
+      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02));
+    }
+
+    .brand{
+      display:flex; align-items:center; gap:12px; min-width:0;
+    }
+    .logo{
+      width:42px; height:42px;
+      border-radius: 14px;
+      background:
+        radial-gradient(14px 14px at 30% 30%, rgba(108,235,255,.9), transparent 60%),
+        radial-gradient(18px 18px at 70% 65%, rgba(255,108,166,.85), transparent 62%),
+        linear-gradient(135deg, rgba(255,255,255,.12), rgba(255,255,255,.04));
+      border:1px solid rgba(255,255,255,.18);
+      box-shadow: 0 10px 30px rgba(0,0,0,.35);
+      position:relative;
+      overflow:hidden;
+    }
+    .logo:after{
+      content:"";
+      position:absolute; inset:-60% -60%;
+      background: conic-gradient(from 210deg, rgba(108,255,181,.0), rgba(108,255,181,.35), rgba(108,235,255,.0), rgba(255,108,166,.35), rgba(108,255,181,.0));
+      animation: spin 6s linear infinite;
+      opacity:.8;
+    }
+    @keyframes spin{ to{ transform: rotate(360deg); } }
+
+    .brand h1{
+      margin:0;
+      font-size: 14px;
+      letter-spacing: .18em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,.88);
+      white-space:nowrap;
+    }
+    .brand .sub{
+      font-size:12px;
+      color: var(--muted);
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      max-width: 56vw;
+    }
+
+    .actions{
+      display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end;
+    }
+
+    button, .pill{
+      appearance:none;
+      border:1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.06);
+      color: var(--text);
+      padding: 10px 12px;
+      border-radius: 14px;
+      cursor:pointer;
+      font-weight: 650;
+      letter-spacing:.02em;
+      transition: transform .12s ease, background .12s ease, border-color .12s ease;
+      user-select:none;
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      line-height:1;
+    }
+    button:hover{ background: rgba(255,255,255,.09); border-color: rgba(255,255,255,.22); }
+    button:active{ transform: translateY(1px) scale(.99); }
+    button.primary{
+      background: linear-gradient(135deg, rgba(108,235,255,.20), rgba(255,108,166,.14));
+      border-color: rgba(255,255,255,.22);
+    }
+    button.danger{
+      background: rgba(255,108,166,.16);
+      border-color: rgba(255,108,166,.25);
+    }
+    button.small{
+      padding:9px 10px;
+      border-radius:12px;
+      font-size:12px;
+    }
+
+    .main{
+      display:grid;
+      grid-template-columns: 1.1fr .9fr;
+      gap: 12px;
+      padding: 12px;
+      min-height: 0;
+      flex: 1;
+    }
+
+    .now{
+      padding: 14px;
+      border-radius: calc(var(--r) - 6px);
+      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+      border: 1px solid rgba(255,255,255,.10);
+      position:relative;
+      overflow:hidden;
+      min-height: 0;
+      display:flex;
+      flex-direction:column;
+      gap: 12px;
+    }
+    .now:before{
+      content:"";
+      position:absolute; inset:-2px;
+      background: radial-gradient(600px 240px at 30% 10%, rgba(108,235,255,.18), transparent 60%),
+                  radial-gradient(520px 220px at 80% 30%, rgba(255,108,166,.14), transparent 65%),
+                  radial-gradient(420px 200px at 30% 95%, rgba(108,255,181,.12), transparent 60%);
+      pointer-events:none;
+    }
+
+    .meta{
+      position:relative;
+      display:flex;
+      gap:12px;
+      align-items:center;
+      min-width:0;
+    }
+
+    .art{
+      width: 74px;
+      height: 74px;
+      border-radius: 18px;
+      border:1px solid rgba(255,255,255,.16);
+      background:
+        radial-gradient(24px 24px at 30% 30%, rgba(108,235,255,.85), transparent 60%),
+        radial-gradient(28px 28px at 75% 60%, rgba(255,108,166,.75), transparent 60%),
+        linear-gradient(135deg, rgba(255,255,255,.10), rgba(255,255,255,.04));
+      box-shadow: 0 14px 40px rgba(0,0,0,.45);
+      overflow:hidden;
+      position:relative;
+      flex: 0 0 auto;
+    }
+    .art img, .art video{
+      width:100%; height:100%;
+      object-fit:cover;
+      display:none;
+    }
+    .art.playing:after{
+      content:"";
+      position:absolute; inset:-30%;
+      background: conic-gradient(from 180deg, rgba(108,235,255,.0), rgba(108,235,255,.26), rgba(255,108,166,.0), rgba(255,108,166,.26), rgba(108,255,181,.0));
+      animation: spin 5.2s linear infinite;
+      opacity:.9;
+      mix-blend-mode: screen;
+    }
+
+    .titleblock{ min-width:0; }
+    .trackTitle{
+      font-size: 18px;
+      margin:0 0 6px 0;
+      letter-spacing:.02em;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+    .soundShort{
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.25;
+      max-height: 2.5em;
+      overflow:hidden;
+    }
+
+    .pillrow{
+      position:relative;
+      display:flex; gap:8px; flex-wrap:wrap;
+    }
+    .pill{
+      font-size:12px;
+      padding:8px 10px;
+      border-radius: 999px;
+      color: rgba(255,255,255,.86);
+      background: rgba(0,0,0,.18);
+    }
+    .pill.good{ border-color: rgba(108,255,181,.28); }
+    .pill.cyan{ border-color: rgba(108,235,255,.28); }
+    .pill.hot{ border-color: rgba(255,108,166,.28); }
+
+    /* Visualizer */
+    .viz{
+      position:relative;
+      height: 110px;
+      border-radius: 16px;
+      border:1px solid rgba(255,255,255,.10);
+      background: linear-gradient(180deg, rgba(0,0,0,.22), rgba(0,0,0,.12));
+      overflow:hidden;
+      display:flex;
+      align-items:flex-end;
+      padding: 10px;
+      gap: 6px;
+    }
+    .bar{
+      width: 8px;
+      flex: 1;
+      border-radius: 999px;
+      background: linear-gradient(180deg, rgba(108,235,255,.85), rgba(255,108,166,.65));
+      transform-origin: bottom;
+      opacity:.85;
+      height: 10%;
+    }
+    .bar:nth-child(3n){ background: linear-gradient(180deg, rgba(108,255,181,.85), rgba(108,235,255,.65)); }
+    .bar:nth-child(4n){ background: linear-gradient(180deg, rgba(255,211,108,.85), rgba(255,108,166,.65)); }
+
+    .controls{
+      position:relative;
+      display:flex;
+      flex-direction:column;
+      gap: 10px;
+    }
+    .transport{
+      display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;
+    }
+    .transport .left, .transport .right{
+      display:flex; gap:8px; align-items:center; flex-wrap:wrap;
+    }
+    .bigPlay{
+      padding: 12px 14px;
+      border-radius: 16px;
+      font-size: 13px;
+    }
+
+    .row{
+      display:flex; align-items:center; gap:10px;
+    }
+    .time{
+      font-variant-numeric: tabular-nums;
+      font-size: 12px;
+      color: var(--muted);
+      min-width: 84px;
+      text-align: right;
+    }
+
+    input[type="range"]{
+      width:100%;
+      accent-color: #ffffff;
+      height: 28px;
+    }
+
+    .progWrap{
+      display:flex;
+      align-items:center;
+      gap:10px;
+    }
+    .prog{ flex: 1; }
+    .progHint{
+      font-size: 11px;
+      color: var(--muted2);
+      margin-top:-4px;
+      padding-left: 2px;
+    }
+
+    /* Right: Queue + Lyrics */
+    .side{
+      flex: 0.95;
+      min-width: 320px;
+      display:flex;
+      flex-direction:column;
+      min-height:0;
+    }
+    .tabs{
+      display:flex;
+      gap:8px;
+      padding: 12px;
+      border-bottom:1px solid var(--stroke);
+      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02));
+    }
+    .tab{
+      flex:1;
+      text-align:center;
+      padding: 10px 10px;
+      border-radius: 14px;
+      border:1px solid rgba(255,255,255,.12);
+      background: rgba(0,0,0,.12);
+      cursor:pointer;
+      font-weight: 750;
+      color: rgba(255,255,255,.75);
+      user-select:none;
+      transition: background .12s ease, color .12s ease, transform .12s ease;
+    }
+    .tab.active{
+      background: linear-gradient(135deg, rgba(108,235,255,.20), rgba(255,108,166,.14));
+      border-color: rgba(255,255,255,.22);
+      color: rgba(255,255,255,.92);
+    }
+    .tab:active{ transform: translateY(1px) scale(.99); }
+
+    .pane{
+      flex:1;
+      min-height:0;
+      display:none;
+      padding: 12px;
+    }
+    .pane.active{ display:block; }
+
+    .queueTools{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      margin-bottom: 10px;
+    }
+
+    .list{
+      min-height:0;
+      height: calc(100% - 44px);
+      overflow:auto;
+      padding-right: 4px;
+    }
+    .item{
+      display:flex;
+      gap:10px;
+      padding: 12px 12px;
+      border-radius: 16px;
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(0,0,0,.12);
+      margin-bottom: 10px;
+      cursor:pointer;
+      transition: transform .12s ease, background .12s ease, border-color .12s ease;
+    }
+    .item:hover{ background: rgba(255,255,255,.06); border-color: rgba(255,255,255,.18); }
+    .item:active{ transform: translateY(1px) scale(.995); }
+    .item.active{
+      background: linear-gradient(180deg, rgba(108,235,255,.12), rgba(255,108,166,.08));
+      border-color: rgba(255,255,255,.22);
+    }
+    .idx{
+      width: 26px;
+      height: 26px;
+      border-radius: 10px;
+      display:grid;
+      place-items:center;
+      font-weight: 850;
+      background: rgba(255,255,255,.06);
+      border:1px solid rgba(255,255,255,.10);
+      color: rgba(255,255,255,.86);
+      flex:0 0 auto;
+      font-size: 12px;
+    }
+    .itMeta{ min-width:0; }
+    .itTitle{
+      font-weight: 850;
+      font-size: 13px;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      margin-bottom: 4px;
+    }
+    .itSound{
+      font-size: 11px;
+      color: var(--muted);
+      line-height: 1.2;
+      max-height: 2.4em;
+      overflow:hidden;
+    }
+
+    .lyrics{
+      height: 100%;
+      overflow:auto;
+      border-radius: 16px;
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(0,0,0,.14);
+      padding: 12px 12px 70px;
+      white-space: pre-wrap;
+      font-size: 12.6px;
+      line-height: 1.45;
+      color: rgba(255,255,255,.84);
+    }
+    .lyrics .hdr{
+      position:sticky;
+      top:0;
+      background: linear-gradient(180deg, rgba(0,0,0,.35), rgba(0,0,0,.0));
+      padding: 12px 6px 10px;
+      margin: -12px -12px 10px;
+      border-bottom:1px solid rgba(255,255,255,.08);
+      backdrop-filter: blur(8px);
+      z-index:2;
+    }
+    .lyrics h2{
+      margin:0 0 6px 0;
+      font-size: 14px;
+      letter-spacing:.02em;
+    }
+    .lyrics .sline{
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.25;
+    }
+
+    /* Toasts */
+    .toasts{
+      position:fixed;
+      right: 12px;
+      bottom: 12px;
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+      z-index: 50;
+      pointer-events:none;
+    }
+    .toast{
+      pointer-events:none;
+      width: min(420px, calc(100vw - 24px));
+      background: rgba(0,0,0,.55);
+      border:1px solid rgba(255,255,255,.16);
+      border-radius: 16px;
+      padding: 10px 12px;
+      box-shadow: 0 20px 60px rgba(0,0,0,.55);
+      backdrop-filter: blur(10px);
+      transform: translateY(8px);
+      opacity: 0;
+      animation: toastIn .18s ease forwards;
+    }
+    @keyframes toastIn{ to{ transform: translateY(0); opacity:1; } }
+    .toast .t{ font-weight: 850; font-size: 12px; margin-bottom: 2px; }
+    .toast .b{ font-size: 12px; color: var(--muted); }
+
+    /* Modal */
+    .modalBack{
+      position:fixed; inset:0;
+      background: rgba(0,0,0,.55);
+      display:none;
+      align-items:center;
+      justify-content:center;
+      padding: 16px;
+      z-index: 60;
+    }
+    .modalBack.show{ display:flex; }
+    .modal{
+      width:min(760px, 100%);
+      background: linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.04));
+      border:1px solid rgba(255,255,255,.18);
+      border-radius: 22px;
+      box-shadow: var(--shadow);
+      overflow:hidden;
+      backdrop-filter: blur(12px);
+    }
+    .modalHead{
+      padding: 14px 16px;
+      border-bottom:1px solid rgba(255,255,255,.14);
+      display:flex; align-items:center; justify-content:space-between; gap:10px;
+    }
+    .modalHead h3{ margin:0; font-size: 14px; letter-spacing:.02em; }
+    .modalBody{ padding: 14px 16px; display:grid; gap:10px; }
+    .modalBody label{
+      font-size: 12px;
+      color: var(--muted);
+      display:block;
+      margin-bottom: 6px;
+    }
+    .field{
+      border:1px solid rgba(255,255,255,.14);
+      background: rgba(0,0,0,.18);
+      border-radius: 14px;
+      padding: 10px 12px;
+      color: var(--text);
+      outline:none;
+      width:100%;
+    }
+    textarea.field{ min-height: 140px; resize: vertical; }
+    .modalFoot{
+      padding: 14px 16px;
+      border-top:1px solid rgba(255,255,255,.14);
+      display:flex; gap:10px; justify-content:flex-end; flex-wrap:wrap;
+    }
+
+    /* Responsive */
+    @media (max-width: 980px){
+      body{ overflow:auto; }
+      .grid, canvas#snow{ position:fixed; }
+      .wrap{ flex-direction:column; height:auto; min-height:100%; }
+      .player,.side{ min-width:unset; }
+      .main{ grid-template-columns: 1fr; }
+    }
+    /* Scrollbars */
+    .list::-webkit-scrollbar, .lyrics::-webkit-scrollbar{ width: 10px; }
+    .list::-webkit-scrollbar-thumb, .lyrics::-webkit-scrollbar-thumb{
+      background: rgba(255,255,255,.12);
+      border-radius: 999px;
+      border:2px solid rgba(0,0,0,.25);
+    }
+  </style>
+</head>
+
+<body>
+  <div class="grid"></div>
+  <canvas id="snow"></canvas>
+
+  <div class="wrap">
+    <!-- PLAYER -->
+    <section class="panel player">
+      <div class="top">
+        <div class="brand">
+          <div class="logo" aria-hidden="true"></div>
+          <div style="min-width:0">
+            <h1>EchoVerse • SwampHop</h1>
+            <div class="sub" id="subtitle">Christmas Eve Playlist • wired tracks</div>
+          </div>
+        </div>
+
+        <div class="actions">
+          <button class="small" id="btnAdd" title="Add a track">➕ Add</button>
+          <button class="small" id="btnImport" title="Import playlist JSON">📥 Import</button>
+          <button class="small" id="btnExport" title="Export playlist JSON">📤 Export</button>
+          <button class="small danger" id="btnReset" title="Reset to defaults">↻ Reset</button>
+        </div>
+      </div>
+
+      <div class="main">
+        <div class="now">
+          <div class="meta">
+            <div class="art" id="art">
+              <img id="artImg" alt="Album art" />
+              <video id="artVid" muted playsinline loop></video>
+            </div>
+            <div class="titleblock">
+              <p class="trackTitle" id="trackTitle">—</p>
+              <div class="soundShort" id="soundShort">—</div>
+            </div>
+          </div>
+
+          <div class="pillrow">
+            <span class="pill cyan" id="pillMode">70/140 • SwampHop</span>
+            <span class="pill good" id="pillState">Ready</span>
+            <span class="pill hot" id="pillHints">Space=Play • ←/→ Seek</span>
+          </div>
+
+          <div class="viz" id="viz" aria-hidden="true"></div>
+
+          <div class="controls">
+            <div class="transport">
+              <div class="left">
+                <button class="small" id="btnPrev" title="Previous (J)">⏮ Prev</button>
+                <button class="primary bigPlay" id="btnPlay" title="Play/Pause (Space)">▶ Play</button>
+                <button class="small" id="btnNext" title="Next (K)">Next ⏭</button>
+              </div>
+
+              <div class="right">
+                <button class="small" id="btnShuffle" title="Shuffle">🔀 Off</button>
+                <button class="small" id="btnLoop" title="Loop">🔁 Off</button>
+                <button class="small" id="btnLyrics" title="Toggle lyrics panel">📝 Lyrics</button>
+              </div>
+            </div>
+
+            <div class="progWrap">
+              <div class="prog">
+                <input id="rangeSeek" type="range" min="0" max="1000" value="0" />
+                <div class="progHint" id="progHint">Drag to seek</div>
+              </div>
+              <div class="time" id="timeReadout">0:00 / 0:00</div>
+            </div>
+
+            <div class="row">
+              <span style="font-size:12px;color:var(--muted);min-width:70px;">Volume</span>
+              <input id="rangeVol" type="range" min="0" max="1" step="0.01" value="0.92" />
+              <span style="font-size:12px;color:var(--muted2);min-width:60px;text-align:right;" id="volReadout">92%</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="now" style="gap:10px;">
+          <div style="position:relative;display:flex;justify-content:space-between;align-items:center;gap:10px;">
+            <div style="min-width:0">
+              <div style="font-weight:900;letter-spacing:.06em;text-transform:uppercase;font-size:12px;color:rgba(255,255,255,.85);">
+                SwampHop Fuel
+              </div>
+              <div style="color:var(--muted);font-size:12px;line-height:1.25;">
+                Wired MP3 filenames (same folder). If you rename files, update the playlist below.
+              </div>
+            </div>
+            <button class="small" id="btnGlow" title="Fun toggle">✨ Glow</button>
+          </div>
+
+          <div style="position:relative;border-radius:16px;border:1px solid rgba(255,255,255,.10);background:rgba(0,0,0,.12);padding:12px;">
+            <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
+              <span class="pill cyan">Tips</span>
+              <span class="pill">Tap track → loads</span>
+              <span class="pill">MP4 art supported</span>
+              <span class="pill">Export JSON to move playlists</span>
+            </div>
+          </div>
+
+          <div style="position:relative;border-radius:16px;border:1px solid rgba(255,255,255,.10);background:rgba(0,0,0,.14);padding:12px;min-height:0;flex:1;overflow:auto;">
+            <div style="font-weight:900;margin-bottom:8px;">Keyboard</div>
+            <div style="color:var(--muted);font-size:12px;line-height:1.5;">
+              Space = Play/Pause • J/K = Prev/Next • ←/→ = Seek 5s • L = Loop • S = Shuffle • Esc = Close modal
+              <br/><br/>
+              Pro move: keep lyrics open on the right and let the queue drive the night.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <audio id="audio" preload="metadata"></audio>
+    </section>
+
+    <!-- SIDE PANEL -->
+    <section class="panel side">
+      <div class="tabs">
+        <div class="tab active" data-tab="queue">Queue</div>
+        <div class="tab" data-tab="lyrics">Lyrics</div>
+      </div>
+
+      <div class="pane active" id="pane-queue">
+        <div class="queueTools">
+          <button class="small" id="btnUp" title="Move up">⬆️ Up</button>
+          <button class="small" id="btnDown" title="⬇️ Down">⬇️ Down</button>
+          <button class="small danger" id="btnRemove" title="Remove track">🗑 Remove</button>
+        </div>
+        <div class="list" id="queueList"></div>
+      </div>
+
+      <div class="pane" id="pane-lyrics">
+        <div class="lyrics" id="lyricsBox">
+          <div class="hdr">
+            <h2 id="lyTitle">—</h2>
+            <div class="sline" id="lySound">—</div>
+          </div>
+          <div id="lyText">Pick a track.</div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <div class="toasts" id="toasts"></div>
+
+  <!-- MODAL -->
+  <div class="modalBack" id="modalBack" role="dialog" aria-modal="true" aria-hidden="true">
+    <div class="modal">
+      <div class="modalHead">
+        <h3 id="modalTitle">Add Track</h3>
+        <button class="small" id="btnClose">✕</button>
+      </div>
+      <div class="modalBody" id="modalBody"></div>
+      <div class="modalFoot" id="modalFoot"></div>
+    </div>
+  </div>
+
+<script>
+/* =========================
+   EchoVerse SwampHop Player
+   - Single-file, no deps
+   - Saves playlist to localStorage
+   - Wired MP3 names (same folder)
+   ========================= */
+
+const STORAGE_KEY = "echoverse_swamphop_playlist_v2_wired";
+
+/* IMPORTANT:
+   Put index.html in the same folder as your MP3s from the screenshot.
+   If index.html is elsewhere, change BASE_PATH to that folder path.
+*/
+const BASE_PATH = "./"; // same directory
+
+const $ = (sel, root=document) => root.querySelector(sel);
+const $$ = (sel, root=document) => Array.from(root.querySelectorAll(sel));
+
+const audio = $("#audio");
+const art = $("#art");
+const artImg = $("#artImg");
+const artVid = $("#artVid");
+
+const btnPlay = $("#btnPlay");
+const btnPrev = $("#btnPrev");
+const btnNext = $("#btnNext");
+const btnShuffle = $("#btnShuffle");
+const btnLoop = $("#btnLoop");
+const btnLyrics = $("#btnLyrics");
+const btnGlow = $("#btnGlow");
+
+const rangeSeek = $("#rangeSeek");
+const rangeVol = $("#rangeVol");
+const timeReadout = $("#timeReadout");
+const volReadout = $("#volReadout");
+const pillState = $("#pillState");
+
+const trackTitle = $("#trackTitle");
+const soundShort = $("#soundShort");
+const queueList = $("#queueList");
+
+const lyTitle = $("#lyTitle");
+const lySound = $("#lySound");
+const lyText = $("#lyText");
+
+const btnAdd = $("#btnAdd");
+const btnImport = $("#btnImport");
+const btnExport = $("#btnExport");
+const btnReset = $("#btnReset");
+
+const btnUp = $("#btnUp");
+const btnDown = $("#btnDown");
+const btnRemove = $("#btnRemove");
+
+const modalBack = $("#modalBack");
+const modalTitle = $("#modalTitle");
+const modalBody = $("#modalBody");
+const modalFoot = $("#modalFoot");
+const btnClose = $("#btnClose");
+
+const subtitle = $("#subtitle");
+const progHint = $("#progHint");
+
+let glow = true;
+let shuffle = false;
+let loopMode = false;
+let currentIndex = 0;
+let seekDragging = false;
+
+/* ====== DEFAULT WIRED PLAYLIST ======
+   These audioUrl values match the EXACT filenames shown in your screenshot.
+   You have duplicates with "(1)" — we're using the clean versions (no (1)).
+*/
+function defaultPlaylist(){
+  return [
+    {
+      id: crypto.randomUUID(),
+      title: "Tinsel on the Sub",
+      sound: "Halftime Swamp-Hop (70/140). Warm vinyl + cozy choir pads, sleigh-bell ticks, smooth plucks, round 808 heartbeat. Uplifting + funny.",
+      audioUrl: BASE_PATH + "tinsel_on_the_sub.mp3",
+      artUrl: "",
+      lyrics: ""
+    },
+    {
+      id: crypto.randomUUID(),
+      title: "Hold Music for the North Pole",
+      sound: "Halftime Swamp-Hop (70/140). On-hold phone-filter vibe, soft-but-fat 808, sleigh-bell hats, goofy ad-libs, bright hook lift.",
+      audioUrl: BASE_PATH + "hold_music_for_the_north_pole.mp3",
+      artUrl: "",
+      lyrics: ""
+    },
+    {
+      id: crypto.randomUUID(),
+      title: "Firmware for the Fireplace",
+      sound: "Mellow upbeat Swamp-Hop (70/140). Fireplace crackle, warm pads, soft plucks, rim-click drums, smooth 808, tiny 8-bit twinkles.",
+      audioUrl: BASE_PATH + "firmware_for_the_fireplace.mp3",
+      artUrl: "",
+      lyrics: ""
+    },
+    {
+      id: crypto.randomUUID(),
+      title: "Who Let the 808 in the Kitchen?",
+      sound: "Funny upbeat Swamp-Hop (70/140). Kitchen foley percussion, sleigh-bell hats, bouncy rim-click groove, warm subby 808, playful synth stabs.",
+      audioUrl: BASE_PATH + "who_let_the_808_in_the_kitchen.mp3",
+      artUrl: "",
+      lyrics: ""
+    },
+    {
+      id: crypto.randomUUID(),
+      title: "Wrap It, Zip It, Ship It",
+      sound: "Upbeat Swamp-Hop (70/140). Tape-rips + scissors as percussion, sleigh bells offbeats, bouncy groove, warm 808, chanty hook.",
+      audioUrl: BASE_PATH + "wrap_it_zip_it_ship_it.mp3",
+      artUrl: "",
+      lyrics: ""
+    },
+    {
+      id: crypto.randomUUID(),
+      title: "Midnight Gratitude (Low-Low Glow)",
+      sound: "Soulful Swamp-Hop (70/140). Warm choir pad, gentle Rhodes, minimal rim-click drums, smooth steady 808. Reflective + uplifting.",
+      audioUrl: BASE_PATH + "midnight_gratitude_(low-low_glow).mp3",
+      artUrl: "",
+      lyrics: ""
+    },
+    {
+      id: crypto.randomUUID(),
+      title: "Sleighbell Work Order",
+      sound: "Upbeat Swamp-Hop (70/140). UI beeps + printer chatter ear-candy, sleigh-bell hats, snappy rim-click groove, warm 808 bounce.",
+      audioUrl: BASE_PATH + "sleighbell_work_order.mp3",
+      artUrl: "",
+      lyrics: ""
+    },
+    {
+      id: crypto.randomUUID(),
+      title: "We Made It (Glow Mode)",
+      sound: "Finale Swamp-Hop (70/140). Big warm choir pad, celebratory bells, punchy rim-click drums, uplifting 808, bright hook lead.",
+      audioUrl: BASE_PATH + "we_made_it_(glow_mode).mp3",
+      artUrl: "",
+      lyrics: ""
+    }
+  ];
+}
+
+/* ====== Storage ====== */
+function loadPlaylist(){
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if(!raw) return defaultPlaylist();
+    const parsed = JSON.parse(raw);
+    if(!Array.isArray(parsed) || !parsed.length) return defaultPlaylist();
+    return parsed;
+  }catch(e){
+    return defaultPlaylist();
+  }
+}
+function savePlaylist(){
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(playlist));
+}
+
+let playlist = loadPlaylist();
+
+/* ====== Visualizer bars ====== */
+const viz = $("#viz");
+const bars = [];
+for(let i=0;i<28;i++){
+  const b = document.createElement("div");
+  b.className = "bar";
+  b.style.height = (8 + Math.random()*22) + "%";
+  viz.appendChild(b);
+  bars.push(b);
+}
+function animateBars(){
+  const t = performance.now();
+  const isPlaying = !audio.paused && audio.currentTime > 0;
+  bars.forEach((b, i) => {
+    const base = isPlaying ? 18 : 10;
+    const amp  = isPlaying ? 70 : 18;
+    const v = base + Math.abs(Math.sin((t/450) + i*0.42)) * amp * (0.55 + (i%5)*0.07);
+    b.style.height = Math.max(8, Math.min(100, v)) + "%";
+    b.style.opacity = isPlaying ? 0.95 : 0.55;
+  });
+  requestAnimationFrame(animateBars);
+}
+requestAnimationFrame(animateBars);
+
+/* ====== Helpers ====== */
+function toast(title, body){
+  const host = $("#toasts");
+  const el = document.createElement("div");
+  el.className = "toast";
+  el.innerHTML = `<div class="t">${escapeHtml(title)}</div><div class="b">${escapeHtml(body)}</div>`;
+  host.appendChild(el);
+  setTimeout(() => {
+    el.style.opacity = "0";
+    el.style.transform = "translateY(8px)";
+    setTimeout(() => el.remove(), 220);
+  }, 2600);
+}
+
+function escapeHtml(s){
+  return (s ?? "").toString()
+    .replaceAll("&","&amp;")
+    .replaceAll("<","&lt;")
+    .replaceAll(">","&gt;")
+    .replaceAll('"',"&quot;")
+    .replaceAll("'","&#039;");
+}
+function clamp(n, a, b){ return Math.max(a, Math.min(b, n)); }
+function fmtTime(sec){
+  if(!isFinite(sec) || sec < 0) return "0:00";
+  const m = Math.floor(sec/60);
+  const s = Math.floor(sec%60);
+  return `${m}:${s.toString().padStart(2,"0")}`;
+}
+function setState(text, kind="good"){
+  pillState.textContent = text;
+  pillState.classList.remove("good","cyan","hot");
+  pillState.classList.add(kind);
+}
+
+function applyArt(url){
+  artImg.style.display = "none";
+  artVid.style.display = "none";
+  art.classList.toggle("playing", !audio.paused);
+
+  if(!url) return;
+
+  const isVideo = /\.mp4(\?|#|$)/i.test(url) || url.startsWith("data:video");
+  if(isVideo){
+    artVid.src = url;
+    artVid.style.display = "block";
+    artVid.play().catch(()=>{});
+  }else{
+    artImg.src = url;
+    artImg.style.display = "block";
+  }
+}
+
+/* ====== Queue rendering ====== */
+function renderQueue(){
+  queueList.innerHTML = "";
+  playlist.forEach((t, idx) => {
+    const item = document.createElement("div");
+    item.className = "item" + (idx === currentIndex ? " active" : "");
+    item.dataset.idx = idx;
+    item.innerHTML = `
+      <div class="idx">${idx+1}</div>
+      <div class="itMeta">
+        <div class="itTitle">${escapeHtml(t.title || "Untitled")}</div>
+        <div class="itSound">${escapeHtml(t.sound || "")}</div>
+      </div>
+    `;
+    item.addEventListener("click", () => {
+      selectIndex(idx, true);
+      play();
+    });
+    queueList.appendChild(item);
+  });
+
+  const active = queueList.querySelector(".item.active");
+  if(active){
+    active.scrollIntoView({block:"nearest", behavior:"smooth"});
+  }
+}
+
+/* ====== Track selection ====== */
+function selectIndex(idx, soft=false){
+  if(!playlist.length) return;
+  currentIndex = clamp(idx, 0, playlist.length-1);
+  const t = playlist[currentIndex];
+
+  trackTitle.textContent = t.title || "Untitled";
+  soundShort.textContent = t.sound || "—";
+  lyTitle.textContent = t.title || "Untitled";
+  lySound.textContent = t.sound || "—";
+  lyText.textContent = t.lyrics || "—";
+
+  subtitle.textContent = `Christmas Eve Playlist • Track ${currentIndex+1}/${playlist.length}`;
+  renderQueue();
+
+  if(!soft){
+    stop();
+  }
+
+  if(t.audioUrl && t.audioUrl !== audio.src){
+    audio.src = t.audioUrl;
+  }else if(!t.audioUrl){
+    audio.removeAttribute("src");
+    audio.load();
+  }
+
+  applyArt(t.artUrl || "");
+  savePlaylist();
+}
+
+function nextIndex(){
+  if(!playlist.length) return 0;
+  if(shuffle){
+    if(playlist.length === 1) return currentIndex;
+    let n = currentIndex;
+    while(n === currentIndex){
+      n = Math.floor(Math.random() * playlist.length);
+    }
+    return n;
+  }
+  return (currentIndex + 1) % playlist.length;
+}
+function prevIndex(){
+  if(!playlist.length) return 0;
+  if(shuffle){
+    if(playlist.length === 1) return currentIndex;
+    let n = currentIndex;
+    while(n === currentIndex){
+      n = Math.floor(Math.random() * playlist.length);
+    }
+    return n;
+  }
+  return (currentIndex - 1 + playlist.length) % playlist.length;
+}
+
+/* ====== Playback ====== */
+function play(){
+  const t = playlist[currentIndex];
+  if(!t) return;
+
+  if(!t.audioUrl){
+    toast("No audio URL", "Add an MP3/WAV URL, then hit Play.");
+    setState("No audio URL", "hot");
+    return;
+  }
+  audio.play().then(() => {
+    btnPlay.textContent = "⏸ Pause";
+    setState("Playing", "cyan");
+    art.classList.add("playing");
+  }).catch(() => {
+    toast("Playback blocked", "Browser may require a user gesture. Click Play again.");
+    setState("Tap Play", "hot");
+  });
+}
+function pause(){
+  audio.pause();
+  btnPlay.textContent = "▶ Play";
+  setState("Paused", "good");
+  art.classList.remove("playing");
+}
+function stop(){
+  audio.pause();
+  audio.currentTime = 0;
+  btnPlay.textContent = "▶ Play";
+  setState("Ready", "good");
+  art.classList.remove("playing");
+}
+
+btnPlay.addEventListener("click", () => {
+  if(audio.paused) play(); else pause();
+});
+btnNext.addEventListener("click", () => {
+  selectIndex(nextIndex(), true);
+  play();
+});
+btnPrev.addEventListener("click", () => {
+  selectIndex(prevIndex(), true);
+  play();
+});
+
+btnShuffle.addEventListener("click", () => {
+  shuffle = !shuffle;
+  btnShuffle.textContent = shuffle ? "🔀 On" : "🔀 Off";
+  toast("Shuffle", shuffle ? "Enabled" : "Disabled");
+});
+btnLoop.addEventListener("click", () => {
+  loopMode = !loopMode;
+  audio.loop = loopMode;
+  btnLoop.textContent = loopMode ? "🔁 On" : "🔁 Off";
+  toast("Loop", loopMode ? "Enabled" : "Disabled");
+});
+
+btnLyrics.addEventListener("click", () => setTab("lyrics"));
+
+btnGlow.addEventListener("click", () => {
+  glow = !glow;
+  document.body.style.filter = glow ? "none" : "saturate(.92) brightness(.92)";
+  toast("Glow", glow ? "On" : "Off");
+});
+
+/* ====== Seek + volume ====== */
+rangeVol.addEventListener("input", () => {
+  audio.volume = Number(rangeVol.value);
+  volReadout.textContent = Math.round(audio.volume*100) + "%";
+});
+audio.volume = Number(rangeVol.value);
+
+rangeSeek.addEventListener("input", () => {
+  seekDragging = true;
+  progHint.textContent = "Release to seek";
+});
+rangeSeek.addEventListener("change", () => {
+  const v = Number(rangeSeek.value)/1000;
+  if(isFinite(audio.duration) && audio.duration > 0){
+    audio.currentTime = v * audio.duration;
+  }
+  seekDragging = false;
+  progHint.textContent = "Drag to seek";
+});
+
+audio.addEventListener("timeupdate", () => {
+  if(!seekDragging && isFinite(audio.duration) && audio.duration > 0){
+    const v = audio.currentTime / audio.duration;
+    rangeSeek.value = Math.round(v * 1000);
+  }
+  timeReadout.textContent = `${fmtTime(audio.currentTime)} / ${fmtTime(audio.duration)}`;
+});
+audio.addEventListener("play", () => {
+  btnPlay.textContent = "⏸ Pause";
+  setState("Playing", "cyan");
+  art.classList.add("playing");
+  applyArt(playlist[currentIndex]?.artUrl || "");
+});
+audio.addEventListener("pause", () => {
+  btnPlay.textContent = "▶ Play";
+  setState("Paused", "good");
+  art.classList.remove("playing");
+});
+audio.addEventListener("ended", () => {
+  if(loopMode) return;
+  selectIndex(nextIndex(), true);
+  play();
+});
+
+/* ====== Tabs ====== */
+function setTab(name){
+  $$(".tab").forEach(t => t.classList.toggle("active", t.dataset.tab === name));
+  $$(".pane").forEach(p => p.classList.toggle("active", p.id === "pane-"+name));
+}
+$$(".tab").forEach(tab => tab.addEventListener("click", () => setTab(tab.dataset.tab)));
+
+/* ====== Queue reorder/remove ====== */
+function moveSelected(delta){
+  if(!playlist.length) return;
+  const from = currentIndex;
+  const to = clamp(from + delta, 0, playlist.length-1);
+  if(from === to) return;
+  const [item] = playlist.splice(from, 1);
+  playlist.splice(to, 0, item);
+  currentIndex = to;
+  savePlaylist();
+  renderQueue();
+  toast("Reordered", `Moved to position ${to+1}`);
+}
+btnUp.addEventListener("click", () => moveSelected(-1));
+btnDown.addEventListener("click", () => moveSelected(1));
+btnRemove.addEventListener("click", () => {
+  if(!playlist.length) return;
+  const removed = playlist.splice(currentIndex, 1)[0];
+  toast("Removed", removed?.title || "Track");
+  if(currentIndex >= playlist.length) currentIndex = Math.max(0, playlist.length-1);
+  savePlaylist();
+  if(playlist.length) selectIndex(currentIndex, false);
+  renderQueue();
+});
+
+/* ====== Modal helpers ====== */
+function openModal(title, build){
+  modalTitle.textContent = title;
+  modalBody.innerHTML = "";
+  modalFoot.innerHTML = "";
+  build(modalBody, modalFoot);
+  modalBack.classList.add("show");
+  modalBack.setAttribute("aria-hidden","false");
+}
+function closeModal(){
+  modalBack.classList.remove("show");
+  modalBack.setAttribute("aria-hidden","true");
+}
+btnClose.addEventListener("click", closeModal);
+modalBack.addEventListener("click", (e) => { if(e.target === modalBack) closeModal(); });
+
+/* ====== Add / Import / Export / Reset ====== */
+btnAdd.addEventListener("click", () => {
+  openModal("Add Track", (body, foot) => {
+    body.innerHTML = `
+      <div>
+        <label>Title</label>
+        <input class="field" id="fTitle" placeholder="Track title" />
+      </div>
+      <div>
+        <label>Sound (short)</label>
+        <input class="field" id="fSound" placeholder="Halftime Swamp-Hop... warm vinyl..." />
+      </div>
+      <div>
+        <label>Audio URL (MP3/WAV/OGG)</label>
+        <input class="field" id="fAudio" placeholder="https://.../track.mp3 or ./track.mp3" />
+      </div>
+      <div>
+        <label>Art URL (PNG/JPG) or MP4 for animated art</label>
+        <input class="field" id="fArt" placeholder="https://.../art.png or .mp4" />
+      </div>
+      <div>
+        <label>Lyrics</label>
+        <textarea class="field" id="fLyrics" placeholder="[Intro | ...]"></textarea>
+      </div>
+    `;
+    foot.innerHTML = `
+      <button class="small" id="addCancel">Cancel</button>
+      <button class="primary" id="addSave">Add Track</button>
+    `;
+    $("#addCancel").addEventListener("click", closeModal);
+    $("#addSave").addEventListener("click", () => {
+      const t = {
+        id: crypto.randomUUID(),
+        title: $("#fTitle").value.trim() || "Untitled",
+        sound: $("#fSound").value.trim(),
+        audioUrl: $("#fAudio").value.trim(),
+        artUrl: $("#fArt").value.trim(),
+        lyrics: $("#fLyrics").value
+      };
+      playlist.push(t);
+      savePlaylist();
+      renderQueue();
+      toast("Added", t.title);
+      closeModal();
+    });
+  });
+});
+
+btnExport.addEventListener("click", async () => {
+  const payload = JSON.stringify(playlist, null, 2);
+  try{
+    await navigator.clipboard.writeText(payload);
+    toast("Export copied", "Playlist JSON copied to clipboard.");
+  }catch(e){
+    openModal("Export Playlist JSON", (body, foot) => {
+      body.innerHTML = `
+        <div>
+          <label>Copy this JSON</label>
+          <textarea class="field" style="min-height:260px">${escapeHtml(payload)}</textarea>
+        </div>
+      `;
+      foot.innerHTML = `<button class="primary" id="exClose">Close</button>`;
+      $("#exClose").addEventListener("click", closeModal);
+    });
+  }
+});
+
+btnImport.addEventListener("click", () => {
+  openModal("Import Playlist JSON", (body, foot) => {
+    body.innerHTML = `
+      <div>
+        <label>Paste exported JSON here</label>
+        <textarea class="field" id="impJson" style="min-height:260px" placeholder='[{"title":"...","sound":"...","audioUrl":"..."}]'></textarea>
+      </div>
+    `;
+    foot.innerHTML = `
+      <button class="small" id="impCancel">Cancel</button>
+      <button class="primary" id="impGo">Import</button>
+    `;
+    $("#impCancel").addEventListener("click", closeModal);
+    $("#impGo").addEventListener("click", () => {
+      try{
+        const parsed = JSON.parse($("#impJson").value);
+        if(!Array.isArray(parsed) || !parsed.length) throw new Error("Not an array");
+        playlist = parsed.map(x => ({
+          id: x.id || crypto.randomUUID(),
+          title: x.title || "Untitled",
+          sound: x.sound || "",
+          audioUrl: x.audioUrl || "",
+          artUrl: x.artUrl || "",
+          lyrics: x.lyrics || ""
+        }));
+        savePlaylist();
+        currentIndex = 0;
+        selectIndex(0, false);
+        renderQueue();
+        toast("Imported", `${playlist.length} track(s)`);
+        closeModal();
+      }catch(e){
+        toast("Import failed", "Invalid JSON.");
+      }
+    });
+  });
+});
+
+btnReset.addEventListener("click", () => {
+  if(!confirm("Reset playlist to defaults? This overwrites saved playlist.")) return;
+  playlist = defaultPlaylist();
+  savePlaylist();
+  currentIndex = 0;
+  selectIndex(0, false);
+  renderQueue();
+  toast("Reset", "Defaults restored.");
+});
+
+/* ====== Keyboard shortcuts ====== */
+window.addEventListener("keydown", (e) => {
+  if(modalBack.classList.contains("show")){
+    if(e.key === "Escape"){ closeModal(); }
+    return;
+  }
+  if(e.key === " "){
+    e.preventDefault();
+    if(audio.paused) play(); else pause();
+  }
+  if(e.key.toLowerCase() === "j"){ selectIndex(prevIndex(), true); play(); }
+  if(e.key.toLowerCase() === "k"){ selectIndex(nextIndex(), true); play(); }
+  if(e.key.toLowerCase() === "l"){ btnLoop.click(); }
+  if(e.key.toLowerCase() === "s"){ btnShuffle.click(); }
+  if(e.key === "ArrowLeft"){
+    audio.currentTime = Math.max(0, audio.currentTime - 5);
+  }
+  if(e.key === "ArrowRight"){
+    audio.currentTime = Math.min(audio.duration || audio.currentTime + 5, audio.currentTime + 5);
+  }
+});
+
+/* ====== Init ====== */
+renderQueue();
+selectIndex(0, false);
+toast("Player ready", "Tracks wired. Hit Play.");
+
+/* ====== Snow canvas ====== */
+const snow = $("#snow");
+const ctx = snow.getContext("2d", { alpha:true });
+let W=0,H=0,flakes=[];
+function resize(){
+  W = snow.width = Math.floor(window.innerWidth * devicePixelRatio);
+  H = snow.height = Math.floor(window.innerHeight * devicePixelRatio);
+  snow.style.width = window.innerWidth + "px";
+  snow.style.height = window.innerHeight + "px";
+  const count = Math.floor((window.innerWidth*window.innerHeight)/24000);
+  flakes = Array.from({length: clamp(count, 40, 140)}, () => spawnFlake(true));
+}
+function spawnFlake(initial=false){
+  const x = Math.random()*W;
+  const y = initial ? Math.random()*H : -20*devicePixelRatio;
+  const r = (0.9 + Math.random()*2.2) * devicePixelRatio;
+  const vx = (-0.35 + Math.random()*0.7) * devicePixelRatio;
+  const vy = (0.55 + Math.random()*1.5) * devicePixelRatio;
+  return {x,y,r,vx,vy,ph:Math.random()*Math.PI*2};
+}
+function tickSnow(){
+  ctx.clearRect(0,0,W,H);
+  const playing = !audio.paused && audio.currentTime>0;
+  const drift = playing ? 1.35 : 1.0;
+
+  for(let i=0;i<flakes.length;i++){
+    const f = flakes[i];
+    f.ph += 0.02*drift;
+    f.x += (f.vx + Math.sin(f.ph)*0.25*devicePixelRatio) * drift;
+    f.y += f.vy * drift;
+
+    if(f.y > H + 20*devicePixelRatio) flakes[i] = spawnFlake(false);
+    if(f.x < -20*devicePixelRatio) f.x = W + 20*devicePixelRatio;
+    if(f.x > W + 20*devicePixelRatio) f.x = -20*devicePixelRatio;
+
+    ctx.beginPath();
+    ctx.arc(f.x, f.y, f.r, 0, Math.PI*2);
+    const a = 0.25 + Math.abs(Math.sin(f.ph))*0.25;
+    ctx.fillStyle = `rgba(255,255,255,${a})`;
+    ctx.fill();
+  }
+  requestAnimationFrame(tickSnow);
+}
+window.addEventListener("resize", resize);
+resize();
+requestAnimationFrame(tickSnow);
+
+/* ====== Auto-status ====== */
+audio.addEventListener("loadedmetadata", () => {
+  setState("Ready", "good");
+});
+audio.addEventListener("error", () => {
+  setState("Missing file?", "hot");
+  toast("Audio error", "File path might be wrong or blocked by the browser.");
+});
+</script>
+</body>
+</html>
