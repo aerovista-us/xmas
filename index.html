@@ -581,7 +581,7 @@
           <div class="logo" aria-hidden="true"></div>
           <div style="min-width:0">
             <h1>EchoVerse • SwampHop</h1>
-            <div class="sub" id="subtitle">Christmas Eve Playlist • wired tracks</div>
+            <div class="sub" id="subtitle">Christmas Eve Playlist • Complete Collection</div>
           </div>
         </div>
 
@@ -652,7 +652,7 @@
                 SwampHop Fuel
               </div>
               <div style="color:var(--muted);font-size:12px;line-height:1.25;">
-                Wired MP3 filenames (same folder). If you rename files, update the playlist below.
+                All tracks wired (same folder). Includes original + alternate versions. Export/Import to save your custom order.
               </div>
             </div>
             <button class="small" id="btnGlow" title="Fun toggle">✨ Glow</button>
@@ -661,9 +661,10 @@
           <div style="position:relative;border-radius:16px;border:1px solid rgba(255,255,255,.10);background:rgba(0,0,0,.12);padding:12px;">
             <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
               <span class="pill cyan">Tips</span>
-              <span class="pill">Tap track → loads</span>
+              <span class="pill">Click track → loads</span>
               <span class="pill">MP4 art supported</span>
-              <span class="pill">Export JSON to move playlists</span>
+              <span class="pill">Export/Import playlists</span>
+              <span class="pill">All versions included</span>
             </div>
           </div>
 
@@ -731,11 +732,12 @@
    - Wired MP3 names (same folder)
    ========================= */
 
-const STORAGE_KEY = "echoverse_swamphop_playlist_v2_wired";
+const STORAGE_KEY = "echoverse_swamphop_playlist_v3_complete";
 
 /* IMPORTANT:
-   Put index.html in the same folder as your MP3s from the screenshot.
+   Put index.html in the same folder as your MP3 files.
    If index.html is elsewhere, change BASE_PATH to that folder path.
+   This playlist includes all tracks: original versions + alternate (1) versions + remasters.
 */
 const BASE_PATH = "./"; // same directory
 
@@ -794,8 +796,8 @@ let currentIndex = 0;
 let seekDragging = false;
 
 /* ====== DEFAULT WIRED PLAYLIST ======
-   These audioUrl values match the EXACT filenames shown in your screenshot.
-   You have duplicates with "(1)" — we're using the clean versions (no (1)).
+   Complete collection: all tracks including alternate versions.
+   Organized by track with original version first, then alternate (1) version.
 */
 function defaultPlaylist(){
   return [
@@ -809,6 +811,14 @@ function defaultPlaylist(){
     },
     {
       id: crypto.randomUUID(),
+      title: "Tinsel on the Sub (Alt)",
+      sound: "Halftime Swamp-Hop (70/140). Alternate mix. Warm vinyl + cozy choir pads, sleigh-bell ticks, smooth plucks, round 808 heartbeat. Uplifting + funny.",
+      audioUrl: BASE_PATH + "tinsel_on_the_sub_(1).mp3",
+      artUrl: "",
+      lyrics: ""
+    },
+    {
+      id: crypto.randomUUID(),
       title: "Hold Music for the North Pole",
       sound: "Halftime Swamp-Hop (70/140). On-hold phone-filter vibe, soft-but-fat 808, sleigh-bell hats, goofy ad-libs, bright hook lift.",
       audioUrl: BASE_PATH + "hold_music_for_the_north_pole.mp3",
@@ -817,9 +827,25 @@ function defaultPlaylist(){
     },
     {
       id: crypto.randomUUID(),
+      title: "Hold Music for the North Pole (Alt)",
+      sound: "Halftime Swamp-Hop (70/140). Alternate mix. On-hold phone-filter vibe, soft-but-fat 808, sleigh-bell hats, goofy ad-libs, bright hook lift.",
+      audioUrl: BASE_PATH + "hold_music_for_the_north_pole_(1).mp3",
+      artUrl: "",
+      lyrics: ""
+    },
+    {
+      id: crypto.randomUUID(),
       title: "Firmware for the Fireplace",
       sound: "Mellow upbeat Swamp-Hop (70/140). Fireplace crackle, warm pads, soft plucks, rim-click drums, smooth 808, tiny 8-bit twinkles.",
       audioUrl: BASE_PATH + "firmware_for_the_fireplace.mp3",
+      artUrl: "",
+      lyrics: ""
+    },
+    {
+      id: crypto.randomUUID(),
+      title: "Firmware for the Fireplace (Alt)",
+      sound: "Mellow upbeat Swamp-Hop (70/140). Alternate mix. Fireplace crackle, warm pads, soft plucks, rim-click drums, smooth 808, tiny 8-bit twinkles.",
+      audioUrl: BASE_PATH + "firmware_for_the_fireplace_(1).mp3",
       artUrl: "",
       lyrics: ""
     },
@@ -835,7 +861,15 @@ function defaultPlaylist(){
       id: crypto.randomUUID(),
       title: "Wrap It, Zip It, Ship It",
       sound: "Upbeat Swamp-Hop (70/140). Tape-rips + scissors as percussion, sleigh bells offbeats, bouncy groove, warm 808, chanty hook.",
-      audioUrl: BASE_PATH + "wrap_it_zip_it_ship_it.mp3",
+      audioUrl: BASE_PATH + "wrap_it,_zip_it,_ship_it.mp3",
+      artUrl: "",
+      lyrics: ""
+    },
+    {
+      id: crypto.randomUUID(),
+      title: "Wrap It, Zip It, Ship It (Alt)",
+      sound: "Upbeat Swamp-Hop (70/140). Alternate mix. Tape-rips + scissors as percussion, sleigh bells offbeats, bouncy groove, warm 808, chanty hook.",
+      audioUrl: BASE_PATH + "wrap_it,_zip_it,_ship_it_(1).mp3",
       artUrl: "",
       lyrics: ""
     },
@@ -849,6 +883,14 @@ function defaultPlaylist(){
     },
     {
       id: crypto.randomUUID(),
+      title: "Midnight Gratitude (Low-Low Glow) [Alt]",
+      sound: "Soulful Swamp-Hop (70/140). Alternate mix. Warm choir pad, gentle Rhodes, minimal rim-click drums, smooth steady 808. Reflective + uplifting.",
+      audioUrl: BASE_PATH + "midnight_gratitude_(low-low_glow)_(1).mp3",
+      artUrl: "",
+      lyrics: ""
+    },
+    {
+      id: crypto.randomUUID(),
       title: "Sleighbell Work Order",
       sound: "Upbeat Swamp-Hop (70/140). UI beeps + printer chatter ear-candy, sleigh-bell hats, snappy rim-click groove, warm 808 bounce.",
       audioUrl: BASE_PATH + "sleighbell_work_order.mp3",
@@ -857,9 +899,41 @@ function defaultPlaylist(){
     },
     {
       id: crypto.randomUUID(),
+      title: "Sleighbell Work Order (Alt)",
+      sound: "Upbeat Swamp-Hop (70/140). Alternate mix. UI beeps + printer chatter ear-candy, sleigh-bell hats, snappy rim-click groove, warm 808 bounce.",
+      audioUrl: BASE_PATH + "sleighbell_work_order_(1).mp3",
+      artUrl: "",
+      lyrics: ""
+    },
+    {
+      id: crypto.randomUUID(),
       title: "We Made It (Glow Mode)",
       sound: "Finale Swamp-Hop (70/140). Big warm choir pad, celebratory bells, punchy rim-click drums, uplifting 808, bright hook lead.",
       audioUrl: BASE_PATH + "we_made_it_(glow_mode).mp3",
+      artUrl: "",
+      lyrics: ""
+    },
+    {
+      id: crypto.randomUUID(),
+      title: "We Made It (Glow Mode) [Alt]",
+      sound: "Finale Swamp-Hop (70/140). Alternate mix. Big warm choir pad, celebratory bells, punchy rim-click drums, uplifting 808, bright hook lead.",
+      audioUrl: BASE_PATH + "we_made_it_(glow_mode)_(1).mp3",
+      artUrl: "",
+      lyrics: ""
+    },
+    {
+      id: crypto.randomUUID(),
+      title: "Between the Pines (Remaster • EchoVerse Cut)",
+      sound: "Swamp-Hop (70/140). EchoVerse remaster. Deep pines atmosphere, warm textures, smooth groove, reflective mood. Holiday vibes reimagined.",
+      audioUrl: BASE_PATH + "between_the_pines_(remaster___echoverse_cut).mp3",
+      artUrl: "",
+      lyrics: ""
+    },
+    {
+      id: crypto.randomUUID(),
+      title: "Late-Night Saint Nick — EchoVerse Remaster v2",
+      sound: "Swamp-Hop (70/140). EchoVerse remaster v2. Nocturnal holiday vibes, smooth 808, warm pads, subtle sleigh-bells. Cozy late-night energy.",
+      audioUrl: BASE_PATH + "late-night_saint_nick_—_echoverse_remaster_v2.mp3",
       artUrl: "",
       lyrics: ""
     }
@@ -1000,7 +1074,7 @@ function selectIndex(idx, soft=false){
   lySound.textContent = t.sound || "—";
   lyText.textContent = t.lyrics || "—";
 
-  subtitle.textContent = `Christmas Eve Playlist • Track ${currentIndex+1}/${playlist.length}`;
+  subtitle.textContent = `Christmas Eve Playlist • ${playlist.length} tracks • ${currentIndex+1}/${playlist.length}`;
   renderQueue();
 
   if(!soft){
@@ -1340,7 +1414,7 @@ window.addEventListener("keydown", (e) => {
 /* ====== Init ====== */
 renderQueue();
 selectIndex(0, false);
-toast("Player ready", "Tracks wired. Hit Play.");
+toast("Player ready", `${playlist.length} tracks loaded. Hit Play to start.`);
 
 /* ====== Snow canvas ====== */
 const snow = $("#snow");
